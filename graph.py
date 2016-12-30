@@ -15,7 +15,9 @@ import math   as M
 import sys
 import os
 
-class Graph:
+from exceptions import *
+
+class Graph(object):
 
   """
   Graph()                         -> null nodegraph
@@ -36,15 +38,19 @@ class Graph:
     self.S = -1
     self.T = -1
 
-    if not directed:
-      assert(
-        (type(V) == list) &
-        (type(E) == list) &
-        (len(E) <= len(V)*(len(V)-1)>>1)
-      )
+    assert(
+      (type(V) == list) &
+      (type(E) == list) &
+      (len(E) <= len(V)*(len(V)-1)>>1)
+    )
+
+    if type(V) != list:
+      raise GraphDomainException("The given node set ")
 
     # populate node list
     for p in V:
+      if type(p) != int:
+        raise GraphDomainException("Non-int {} in vertex set".format())
       node = self.Node(p)
       if directed:
         if source == p:
@@ -241,6 +247,7 @@ class Graph:
     """
     Node(i[, **kwargs]) -> node with given parameters
     Available keyword arguments:
+      * key       - pointer to key that node should hole (defauult value is None) 
       * value     - pointer to data that node should hold (default value is None)
       * visited   - declare node as visited or not (default value is False)
       * nextNode  - pointer next node in the linked list containing nodes with no incoming edges
@@ -248,6 +255,7 @@ class Graph:
 
     def __init__(self,
                  i,                                 # node id
+                 key = None,                        # pointer to key the node holds
                  value = None,                      # pointer to data that node holds
                  visited = False,                   # mark node as unvisited by default
                  nextNode = None,                   # for use in creating linked list of nodes with no incoming edges
@@ -470,3 +478,10 @@ class Graph:
               if f[0] == u: continue
             self.E[v] += quickParse(u,w)
             continue
+
+  class Path:
+    """
+    Iterator over a specific sset of edges corresponding to a path
+    """
+
+    
