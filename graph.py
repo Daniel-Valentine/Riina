@@ -1,11 +1,17 @@
-#
-# Node-graph
-# Code
-#
+"""
+Riina - a Python3 node-graph library
+-----
+Author: Daniel Valentine
+E-mail: dval@bu.edu
+-----
+File  : graph.py
+Desc  : Basic graph, node, edge implementations
+Date  : December 29, 2016
+"""
 
 import random as R
-import heapq as H
-import math as M
+import heapq  as H
+import math   as M
 import sys
 import os
 
@@ -53,14 +59,6 @@ class Graph:
 
   def V(self):
     """ Returns vertex set of graph """
-
-##    keys = list(self.g.keys())
-##    V = [v for v in keys]
-##    
-##    for i in keys:
-##      for e in self.g[i]:
-##        if e[0] not in V:
-##          V += [e[0]]
 
     return self.N
 
@@ -114,13 +112,12 @@ class Graph:
     return -1
 
   def exists(self, u):
-    """ Determines if node u in graph """
+    """ Returns True if node u in graph """
 
     assert(type(u) == int)
     return type(self.findNode(u)) == self.Node
 
   def reverseEdge(self, u, v):
-
     """ In a directed graph, reverse the edge u->v """
 
     assert(type(u) == int)
@@ -144,73 +141,101 @@ class Graph:
 
     return
 
-  def findPath(self, s = -1, t = -1, markPathVisited = False):
-    """ DFS probing of directed graph to determine path from u to v """
+  class algorithms:
 
-    assert(self.dir) # for now make sure this only runs if graph is directed
+    """
+    Graph algorithms
+    """
 
-    if s != -1:
-      u = self.findNode(s)
-      assert(type(u) != int)
-    else:
-      u = self.S
-      
-    if t != -1:
-      t = self.findNode(t)
-      assert(type(t) != int)
-    else:
-      t = self.T
+    def FordFulkerson(G):
+      return NotImplemented
     
-    S = [u]
-    candidate = [u] # stack of last visited nodes with > 1 edges
-    path = []
+    def findPath(G,                         # the directed graph itself
+                 s = -1,                    # origin node; if not specified, will start from defined source node, or raise NoSuchNodeException
+                 t = -1,                    # destination node; if not specified, will attempt to reach defined sink node, or raise NoSuchNodeException
+                 markPathVisited = False,   # if True, will mark all nodes in discovered path visited
+                 paradigm = 0               # edge selection paradigm; default is 0: DFS-based Greedy
+                 ):
+      """
+      Probe a directed graph for a path from node s to node t
 
-    while len(S) > 0:
-      v = S.pop()
-      path += [v]
-      #print(path)
-      edgeCount = 0
+      Required arguments:
+        * s - origin node; if not specified, will start from defined source node, or raise NoSuchNodeException
+        * t - destination node; if not specified, will attempt to reach defined sink node, or raise NoSuchNodeException
 
-      if v == t and len(path) > 1:
-        v.visit()
-        if markPathVisited:
-          for i in range(len(path)-1):
-            self.g.markPathVisited(path[i],path[i+1])
-        return path
+      Keyword arguments:
+        * markPathVisited - if True, will mark all nodes in discovered path visited
+        * paradigm        - edge selection paradigm; available options:
+          + 0:  DFS-based Greedy, default
+          + 1:  Shortest path (Dijkstra); throws exception if negative edge detected
+          + 2:  Shortest path (Bellman-Ford)
+          + 3:  DP weight-maximizing, ideal for Ford-Fulkerson
+      """
 
-      # plumb the graph if there are available (unvisited) edges
-##      if v in self.g and not v.visited:
-##        v.visit()
-##        for n in self.g[v]:
-##          if not n[0].visited or n[0] == u:
-##            S.append(n[0])
-##            edgeCount += 1
-##        if edgeCount > 1:
-##          candidate.append(v)
+      assert(G.dir), "G is not a directed graph" # for now make sure this only runs if graph is directed
 
-      if self.g.contains(v) and not v.visited:
-        v.visit()
-        for n in self.g[v]:
-          if not n[0].visited or n[0] == u:
-            S.append(n[0])
-            edgeCount += 1
-        if edgeCount > 1:
-          candidate.append(v)
-
-      # if there are no available outgoing edges, reverse to the last candiate edge
+      if s != -1:
+        u = G.findNode(s)
+        assert(type(u) != int) # raise error if source node does not exist
       else:
-        v.visit()
-        if len(candidate) == 0: #if we've exhaused all candidate nodes, it's clear there's no path to target node
-          return None
+        u = G.S
+        
+      if t != -1:
+        t = G.findNode(t)
+        assert(type(t) != int) # raise error if destination node does not exist
+      else:
+        t = G.T
+      
+      S = [u]
+      candidate = [u] # stack of last visited nodes with > 1 edges
+      path = []
 
-        # backtrack to last candidate node
-        goto = candidate.pop()
-        #print("Reversing to", goto)
-        goto.unvisit()
-        S.append(goto)
+      while len(S) > 0:
+        v = S.pop()
+        path += [v]
+        #print(path)
+        edgeCount = 0
 
-        while len(path) > 0 and path.pop() != goto:
-          continue
+        if v == t and len(path) > 1:
+          v.visit()
+          if markPathVisited:
+            for i in range(len(path)-1):
+              G.g.markPathVisited(path[i],path[i+1])
+          return path
+
+        # plumb the graph if there are available (unvisited) edges
+        ##      if v in self.g and not v.visited:
+        ##        v.visit()
+        ##        for n in self.g[v]:
+        ##          if not n[0].visited or n[0] == u:
+        ##            S.append(n[0])
+        ##            edgeCount += 1
+        ##        if edgeCount > 1:
+        ##          candidate.append(v)
+
+        if G.g.contains(v) and not v.visited:
+          v.visit()
+          for n in G.g[v]:
+            if not n[0].visited or n[0] == u:
+              S.append(n[0])
+              edgeCount += 1
+          if edgeCount > 1:
+            candidate.append(v)
+
+        # if there are no available outgoing edges, reverse to the last candiate edge
+        else:
+          v.visit()
+          if len(candidate) == 0: #if we've exhaused all candidate nodes, it's clear there's no path to target node
+            return None
+
+          # backtrack to last candidate node
+          goto = candidate.pop()
+          #print("Reversing to", goto)
+          goto.unvisit()
+          S.append(goto)
+
+          while len(path) > 0 and path.pop() != goto:
+            continue
 
   class Node:
     """
@@ -358,7 +383,7 @@ class Graph:
       return s
 
     def __getitem__(self, u):
-      """\
+      """
       Returns the list of edges to and from u; if graph is directed, returns all outgoing edges from u
       """
 
