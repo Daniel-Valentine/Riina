@@ -45,11 +45,18 @@ class TooManyEdgesException(EdgeException):
 #
 # Path exceptions
 #
-class InvalidPathException(Exception):
+
+class PathException(Exception):
   pass
 
-class NoSuchPathException(InvalidPathException):
+class InvalidPathException(PathException):
   pass
 
-class CycleException(InvalidPathException):
+class PathDomainException(PathException):
+  pass
+
+class NoSuchPathException(PathException):
+  pass
+
+class CycleException(PathException):
   pass

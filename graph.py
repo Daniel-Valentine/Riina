@@ -45,12 +45,12 @@ class Graph(object):
     )
 
     if type(V) != list:
-      raise GraphDomainException("The given node set ")
+      raise GraphDomainException("The given node set must be a list object")
 
     # populate node list
     for p in V:
       if type(p) != int:
-        raise GraphDomainException("Non-int {} in vertex set".format())
+        raise GraphDomainException("Non-int {} in vertex set".format(p))
       node = self.Node(p)
       if directed:
         if source == p:
@@ -481,7 +481,22 @@ class Graph(object):
 
   class Path:
     """
-    Iterator over a specific sset of edges corresponding to a path
+    Iterator over a specific set of Edge objects corresponding to a path
     """
 
-    
+    def __main__(self, u, v, *edges):
+      
+      if type(u) != Graph.Node or type(v) != Graph.Node:
+        raise PathDomainException("Nodes must be Node objects")
+      self.u = u
+      self.v = v
+
+      self.edges = []
+      
+      for e in edges:
+        if type(e) != Graph.Edge:
+          raise PathDomainExcepion("Edges must be Edge objects")
+        edges.append(e)
+
+    def __repr__(self):
+      return "Path(" + int(u) + ", " + int(v) + ")"
