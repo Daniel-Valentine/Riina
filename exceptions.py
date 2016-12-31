@@ -36,6 +36,9 @@ class NoSuchNodeException(NodeException):
 class EdgeException(Exception):
   pass
 
+class EdgeDomainException(EdgeException):
+  pass
+
 class NoSuchEdgeException(EdgeException):
   pass
 

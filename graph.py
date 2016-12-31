@@ -20,11 +20,14 @@ from exceptions import *
 class Graph(object):
 
   """
-  Graph()                         -> null nodegraph
-  Graph(nodes)                    -> nodegraph with collection of unconnected nodes (as ints)
-  Graph(nodes, *edges)            -> undirected, possibly cyclic graph with edges given as (int node_1, int node_2[, int weight])
-  Graph(nodes, *edges, **kwargs)  -> keyword arguments: visited (directed: bool, source: int, sink: int) 
-  """
+  Riina Graph object
+
+  Constructors:
+    * Graph()                         -> null nodegraph
+    * Graph(nodes)                    -> nodegraph with collection of unconnected nodes (as ints)
+    * Graph(nodes, *edges)            -> undirected, possibly cyclic graph with edges given as (int node_1, int node_2[, int weight])
+    * Graph(nodes, *edges, *args)     -> optional arguments: visited (directed: bool, source: int, sink: int) 
+  """  
 
   # NB only a directed graph!
   
@@ -61,23 +64,17 @@ class Graph(object):
       self.N.sort()
 
     # populate edge list
-    self.g = self.EdgeTable(self, *E)
+    self.adj = self.EdgeTable(self, *E)
 
   def V(self):
-    """ Returns vertex set of graph """
+    """ Returns duplicate of graph's vertex set """
 
-    return self.N
+    return [v for v in self.N]
 
   def E(self):
-    """ Returns edge set of graph as an EdgeTable object """
+    """ Returns duplicate of graph's edge-adjacency dictionary """
 
-    E = []
-
-    for u in g:
-      for e in self.g[u]:
-        E += [(u, e[0], e[1])]
-
-    return E
+    return self.adj.duplicate()
 
   def resetVisits(self):
     """ Unvisit all nodes in the graph """
@@ -135,15 +132,15 @@ class Graph(object):
     v = self.findNode(v)
     weight = -1
 
-    for e in self.g[u]:
+    for e in self.adj[u]:
       if v == e[0]:
         weight = e[1]
-        self.g[u].remove(e)
-        if len(self.g[u]) == 0:
-          self.g.pop(u)
+        self.adj[u].remove(e)
+        if len(self.adj[u]) == 0:
+          self.adj.pop(u)
         break
 
-    self.g.add((v, u, weight))
+    self.adj.add((v, u, weight))
 
     return
 
@@ -169,7 +166,7 @@ class Graph(object):
         * s - origin node; if not specified, will start from defined source node, or raise NoSuchNodeException
         * t - destination node; if not specified, will attempt to reach defined sink node, or raise NoSuchNodeException
 
-      Keyword arguments:
+      Optional arguments:
         * markPathVisited - if True, will mark all nodes in discovered path visited
         * paradigm        - edge selection paradigm; available options:
           + 0:  DFS-based Greedy, default
@@ -206,22 +203,22 @@ class Graph(object):
           v.visit()
           if markPathVisited:
             for i in range(len(path)-1):
-              G.g.markPathVisited(path[i],path[i+1])
+              G.adj.markPathVisited(path[i],path[i+1])
           return path
 
         # plumb the graph if there are available (unvisited) edges
-        ##      if v in self.g and not v.visited:
+        ##      if v in self.adj and not v.visited:
         ##        v.visit()
-        ##        for n in self.g[v]:
+        ##        for n in self.adj[v]:
         ##          if not n[0].visited or n[0] == u:
         ##            S.append(n[0])
         ##            edgeCount += 1
         ##        if edgeCount > 1:
         ##          candidate.append(v)
 
-        if G.g.contains(v) and not v.visited:
+        if G.adj.contains(v) and not v.visited:
           v.visit()
-          for n in G.g[v]:
+          for n in G.adj[v]:
             if not n[0].visited or n[0] == u:
               S.append(n[0])
               edgeCount += 1
@@ -245,8 +242,8 @@ class Graph(object):
 
   class Node:
     """
-    Node(i[, **kwargs]) -> node with given parameters
-    Available keyword arguments:
+    Node(i[, *args]) -> node with given parameters
+    Optional arguments:
       * key       - pointer to key that node should hole (defauult value is None) 
       * value     - pointer to data that node should hold (default value is None)
       * visited   - declare node as visited or not (default value is False)
@@ -269,25 +266,25 @@ class Graph(object):
       self.next = nextNode
 
     def __eq__(self, other):
-      return self.i == other.Get()
+      return self.i == int(other)
 
     def __ne__(self, other):
-      return self.i != other.Get()
+      return self.i != int(other)
 
     def __gt__(self, other):
-      return self.i > other.Get()
+      return self.i > int(other)
 
     def __ge__(self, other):
-      return self.i >= other.Get()
+      return self.i >= int(other)
 
     def __lt__(self, other):
-      return self.i < other.Get()
+      return self.i < int(other)
 
     def __le__(self, other):
-      return self.i <= other.Get()
+      return self.i <= int(other)
 
     def __cmp__(self, other):
-      return self.i - other.Get()
+      return self.i - int(other)
 
     def __hash__(self):
       return hash(self.i)
@@ -356,14 +353,24 @@ class Graph(object):
     def __init__(self,
                  G,                                 # parent graph
                  *edges,                            # list of edges
-                 directed = True,                   # is graph directed or not?
-                 orderBy = lambda x: x[0],          #
-                 hashf = lambda u, v, SIZE: (8831 * min(int(u),int(v))) % SIZE # hashing
+                 directed = False,                  # is graph directed or not?
+                 orderBy = 0                        # ordering paradigm
                  ):
+
+      """
+      Edge adjacency table/dictionary for Riina Graph object
+
+      Constructors:
+        * EdgeTable(G)                        -> empty EdgeTable
+        * EdgeTable(G, *edges)                -> build EdgeTable with specified edges as (v_1, v_2[, weight]) tuples (nodes can be either ints or Node objects)
+        * EdgeTable(G, *edges, *args)         -> optional arguments: directed, a bool which specifies whether or not the graph is directed; orderBy, which eiher
+                                                 takes on value 0 for ordering each adjacency list by incident node, or 1 for ordering by edge weight
+      """  
+      
 
       self.edgeLengths = -1
 
-      self.G = G
+      self.adj = G
       self.dir = directed
       self.E = {}
 
@@ -397,7 +404,7 @@ class Graph(object):
 
       if type(u) != Graph.Node:
         assert(type(u) == int)
-        u = self.G.findNode(u)
+        u = self.adj.findNode(u)
 
       if u not in self.E:
         return [-1]
@@ -418,7 +425,7 @@ class Graph(object):
     def add(self, *edges, markAsVisited = False):
 
       def findNode(u):
-        return self.G.findNode(u)
+        return self.adj.findNode(u)
 
       def quickParse(v, w):
 
@@ -431,7 +438,8 @@ class Graph(object):
 
         if self.edgeLengths == -1:
           self.edgeLengths = len(e)
-        assert(len(e) == self.edgeLengths)
+        if len(e) != self.edgeLengths:
+          raise EdgeDomainException("Inconsistent edge tuple lengths")
         
         if len(e) == 3:
           assert(e[2] >= 0) # make sure weight is positive
@@ -439,45 +447,37 @@ class Graph(object):
         else:
           w = None
 
-        if e[0] <= e[1] or self.dir:
-          if (type(e[0]) == type(e[1]) and type(e[0]) == int):
-            u = findNode(e[0])
-            v = findNode(e[1])
-          else:
-            u = e[0]
-            v = e[1]
+        if (type(e[0]) == type(e[1]) and type(e[0]) == int):
+          u = findNode(e[0])
+          v = findNode(e[1])
         else:
-          if (type(e[0]) == type(e[1]) and type(e[0]) == int):
-            u = findNode(e[1])
-            v = findNode(e[0])
-          else:
-            u = e[1]
-            v = e[0]
-        
-        if self.dir: # insert all edges in a directed graph
-          if u not in self.E:
-            self.E[u] = quickParse(v,w)
-            continue
-          else:
-            for f in self.E[u]:
-              if f[0] == v: continue
-            self.E[u] += quickParse(v,w)
-            continue
+          u = e[0]
+          v = e[1]
 
+        # add the edges into the adjacency list
+        # duplicate edges if the graph is not directed
+        unique = True
+        if u not in self.E:
+          self.E[u] = quickParse(v,w)
+          continue
         else:
-          if u not in self.E and v not in self.E:
-            self.E[u] = quickParse(v,w)
-            continue
-          if u in self.E and v not in E:
-            for f in self.E[u]:
-              if f[0] == v: continue
-            self.E[u] += quickParse(v,w)
-            continue
-          if v in self.E:
-            for f in self.E[v]:
-              if f[0] == u: continue
-            self.E[v] += quickParse(u,w)
-            continue
+          for f in self.E[u]:
+            if f[0] == v: # avoid adding duplicate edges
+              unique = False
+              break
+          if unique: self.E[u] += quickParse(v,w)
+          continue
+        if not self.dir:
+          if v not in self.E:
+          self.E[v] = quickParse(u,w)
+          continue
+        else:
+          for f in self.E[u]:
+            if f[0] == u: # avoid adding duplicate edges
+              unique = False
+              break
+          if unique: self.E[v] += quickParse(u,w)
+          continue
 
   class Path:
     """
