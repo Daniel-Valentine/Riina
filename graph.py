@@ -349,25 +349,23 @@ class Graph(object):
       self.visit = False
 
   class EdgeTable: # edge tuple for u-v: [node v: Node, edgeVisited: bool[, weight: real]]
+    """
+    Edge adjacency table/dictionary for Riina Graph object
 
+    Constructors:
+      * EdgeTable(G)                        -> empty EdgeTable
+      * EdgeTable(G, *edges)                -> build EdgeTable with specified edges as (v_1, v_2[, weight]) tuples (nodes can be either ints or Node objects)
+      * EdgeTable(G, *edges, *args)         -> optional arguments: directed, a bool which specifies whether or not the graph is directed; orderBy, which eiher
+                                               takes on value 0 for ordering each adjacency list by incident node, or 1 for ordering by edge weight
+    """
+    
     def __init__(self,
                  G,                                 # parent graph
                  *edges,                            # list of edges
                  directed = False,                  # is graph directed or not?
                  orderBy = 0                        # ordering paradigm
                  ):
-
-      """
-      Edge adjacency table/dictionary for Riina Graph object
-
-      Constructors:
-        * EdgeTable(G)                        -> empty EdgeTable
-        * EdgeTable(G, *edges)                -> build EdgeTable with specified edges as (v_1, v_2[, weight]) tuples (nodes can be either ints or Node objects)
-        * EdgeTable(G, *edges, *args)         -> optional arguments: directed, a bool which specifies whether or not the graph is directed; orderBy, which eiher
-                                                 takes on value 0 for ordering each adjacency list by incident node, or 1 for ordering by edge weight
-      """  
       
-
       self.edgeLengths = -1
 
       self.adj = G
@@ -412,6 +410,19 @@ class Graph(object):
 
     def contains(self, u):
       return u in self.E
+
+    def verifyEdge(self, u, v):
+      """ Verify if edge from nodes u to v exists in parent graph """
+
+      if type(u) == int:
+        u = self.G.findNode(u)
+      if type(v) == int:
+        v = self.G.findNode(v)
+
+      if u == -1 or v == -1:
+        raise NoSuchNodeException("Either node u or v doesn't exist")
+        
+      return v in self.adj[u]
 
     def pop(self, key):
       """ Remove all edges from node "key" from edge table """
@@ -469,8 +480,8 @@ class Graph(object):
           continue
         if not self.dir:
           if v not in self.E:
-          self.E[v] = quickParse(u,w)
-          continue
+            self.E[v] = quickParse(u,w)
+            continue
         else:
           for f in self.E[u]:
             if f[0] == u: # avoid adding duplicate edges
@@ -484,19 +495,44 @@ class Graph(object):
     Iterator over a specific set of Edge objects corresponding to a path
     """
 
-    def __main__(self, u, v, *edges):
+    def __main__(self, adj, s, t, *edges, acyclic = False):
+
+      assert(type(adj) == Graph.EdgeTable)
       
       if type(u) != Graph.Node or type(v) != Graph.Node:
         raise PathDomainException("Nodes must be Node objects")
-      self.u = u
-      self.v = v
+      self.s = s
+      self.t = t
 
       self.edges = []
-      
-      for e in edges:
-        if type(e) != Graph.Edge:
-          raise PathDomainExcepion("Edges must be Edge objects")
-        edges.append(e)
+
+      if edges is not None:
+        for e in edges:
+          if type(e) != Graph.Edge:
+            raise PathDomainExcepion("Edges must be Edge objects")
+          self.add(e)
 
     def __repr__(self):
-      return "Path(" + int(u) + ", " + int(v) + ")"
+      return "Path(" + int(self.s) + ", " + int(self.t) + ")"
+
+    def add(self, u, v, verifyPath = True):
+      """
+      Add an edge to the path
+      """
+
+      if verifyPath:
+        if not self.adj.verify(u,v):
+          return NoSuchEdgeException
+
+    #
+    # to do:
+    # 1) verify that adding edge does not cause a branching
+    # 2) (if needed) verify that adding edge does not create a cycle
+    #
+
+      if u not in self.edges:
+        if v not in self.edges:
+          self.edges += [u, v]
+        self.edges += [v]
+      
+      

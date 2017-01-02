@@ -14,9 +14,11 @@ Date  : December 29, 2016
 #
 
 class GraphException(Exception):
+  """ Generic exception for Graph objects """
   pass
 
 class GraphDomainException(GraphException):
+  """ Invalid arguments passed into a Graph constructor """
   pass
 
 #
@@ -24,9 +26,11 @@ class GraphDomainException(GraphException):
 #
 
 class NodeException(Exception):
+  """ Generic exception for Node objects """
   pass
 
 class NoSuchNodeException(NodeException):
+  """ Node does not exist in graph """
   pass
 
 #
@@ -34,6 +38,7 @@ class NoSuchNodeException(NodeException):
 #
 
 class EdgeException(Exception):
+  """ Generic exception for Edge and EdgeTable objects """
   pass
 
 class EdgeDomainException(EdgeException):
@@ -50,16 +55,25 @@ class TooManyEdgesException(EdgeException):
 #
 
 class PathException(Exception):
+  """ Generic exception for Path objects """
   pass
 
 class InvalidPathException(PathException):
+  """ Path contains a structural problem """
   pass
 
 class PathDomainException(PathException):
+  """ Invalid arguments passed into a Path constructor """
   pass
 
 class NoSuchPathException(PathException):
+  """ Path does not exist in Graph object """
   pass
 
 class CycleException(PathException):
+  """ Path is a cycle """
+  pass
+
+class PathBranchException(InvalidPathException):
+  """ Attempt to add edge to Path object caused a branch to form in the path """
   pass
